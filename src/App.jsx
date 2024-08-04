@@ -1,12 +1,16 @@
 import { useState } from 'react';
 import './App.css';
 import Dashboard from './Dashboard';
+import { auth } from './firebase'; // Import from the firebase.js file
+import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth'; // Import from firebase/auth
 
 function App() {
+  const provider = new GoogleAuthProvider();
   const [isActive, setIsActive] = useState(false);
   const [Email, setEmail] = useState('');
   const [passw, setPassword] = useState('');
   const [isCredTrue, setCred] = useState(false);
+
   const defEmail = "admin";
   const defPas = "admin";
 
@@ -16,20 +20,31 @@ function App() {
       setCred(true);
     }
   };
-  console.log(isCredTrue)
+
+  const handleGoogleSignIn = async () => {
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      console.log('User signed in:', user);
+      setCred(true);
+    } catch (error) {
+      console.error('Error during Google sign-in:', error);
+    }
+  };
 
   return (
     <>
       {isCredTrue ? (
         <Dashboard />
-        
       ) : (
         <div className={`container ${isActive ? 'active' : ''}`} id="container">
           <div className="form-container sign-up">
             <form>
               <h1>Create Account</h1>
               <div className="social-icons">
-                <a href="#" className="icon"><i className="fa-brands fa-google-plus-g"></i></a>
+                <a href="#" className="icon" onClick={handleGoogleSignIn}>
+                  <i className="fa-brands fa-google-plus-g"></i>
+                </a>
               </div>
               <span>or use your email for registration</span>
               <input type="text" placeholder="Name" />
@@ -42,7 +57,9 @@ function App() {
             <form>
               <h1>Sign In</h1>
               <div className="social-icons">
-                <a href="#" className="icon"><i className="fa-brands fa-google-plus-g"></i></a>
+                <a href="#" className="icon" onClick={handleGoogleSignIn}>
+                  <i className="fa-brands fa-google-plus-g"></i>
+                </a>
               </div>
               <span>or use your email password</span>
               <input type="email" placeholder="Email" onChange={(e) => setEmail(e.target.value)} />
