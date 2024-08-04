@@ -17,7 +17,7 @@ body{
 }
 
 .container{
-    background-color: #fff;
+    background-color:white;
     border-radius: 30px;
     position: relative;
     overflow: hidden;
@@ -65,7 +65,7 @@ body{
 }
 
 .container form{
-    background-color: #fff;
+    background-color: white;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -75,7 +75,7 @@ body{
 }
 
 .container input{
-    background-color: #eee;
+    background-color:white;
     border: none;
     margin: 8px 0;
     padding: 10px 15px;
@@ -225,4 +225,7 @@ body{
 }
 input{
     color: black;
+}
+h1,h2{
+    color: #333;
 }
