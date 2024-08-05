@@ -2,7 +2,8 @@ import { useState } from 'react';
 import './App.css';
 import Dashboard from './Dashboard';
 import { auth } from './firebase'; // Import from the firebase.js file
-import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth'; // Import from firebase/auth
+import { GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
+import { get, getDatabase, ref, set } from 'firebase/database'; // Import from firebase/database
 
 function App() {
   const provider = new GoogleAuthProvider();
@@ -10,14 +11,60 @@ function App() {
   const [Email, setEmail] = useState('');
   const [passw, setPassword] = useState('');
   const [isCredTrue, setCred] = useState(false);
+  const [newUser, setNewUser] = useState({ username: '', Email: '', passw: '' });
+  const database = getDatabase(); // Get a reference to the database
 
   const defEmail = "admin";
   const defPas = "admin";
 
-  const handleLoginClick = () => {
+  const handleLoginClick = async () => {
     console.log(`Email: ${Email}, Password: ${passw}`);
     if (Email === defEmail && passw === defPas) {
       setCred(true);
+    } else {
+      try {
+        const userRef = ref(database, 'users');
+        const snapshot = await get(userRef);
+        if (snapshot.exists()) {
+          const users = snapshot.val();
+          const user = Object.values(users).find(user => user.email === Email);
+          if (user && user.password === passw) {
+            setCred(true);
+          } else {
+            alert('Invalid credentials');
+            setEmail('');
+            setPassword('');
+          }
+        } else {
+          alert('No users found');
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      }
+    }
+  };
+
+  const handleRegistration = async () => {
+    try {
+      // Create a new user with email and password
+      const userCredential = await createUserWithEmailAndPassword(auth, newUser.Email, newUser.passw);
+      const user = userCredential.user;
+
+      // Save user profile data to Firebase Realtime Database
+      const userRef = ref(database, 'users/' + user.uid);
+      await set(userRef, {
+        username: newUser.username,
+        email: newUser.Email,
+        password: newUser.passw // Adding password to user data for login comparison
+      });
+
+      // Send email verification
+      await sendEmailVerification(user);
+
+      alert('Registration successful! Please check your email for verification.');
+    } catch (error) {
+      console.error('Error during registration:', error);
+      alert('Error during registration');
     }
   };
 
@@ -39,7 +86,7 @@ function App() {
       ) : (
         <div className={`container ${isActive ? 'active' : ''}`} id="container">
           <div className="form-container sign-up">
-            <form>
+            <form method='POST'>
               <h1>Create Account</h1>
               <div className="social-icons">
                 <a href="#" className="icon" onClick={handleGoogleSignIn}>
@@ -47,10 +94,25 @@ function App() {
                 </a>
               </div>
               <span>or use your email for registration</span>
-              <input type="text" placeholder="Name" />
-              <input type="email" placeholder="Email" />
-              <input type="password" placeholder="Password" />
-              <button type="button">Sign Up</button>
+              <input
+                type="text"
+                placeholder="Name"
+                value={newUser.username}
+                onChange={(e) => setNewUser(prev => ({ ...prev, username: e.target.value }))}
+              />
+              <input
+                type="email"
+                placeholder="Email"
+                value={newUser.Email}
+                onChange={(e) => setNewUser(prev => ({ ...prev, Email: e.target.value }))}
+              />
+              <input
+                type="password"
+                placeholder="Password"
+                value={newUser.passw}
+                onChange={(e) => setNewUser(prev => ({ ...prev, passw: e.target.value }))}
+              />
+              <button type="button" onClick={handleRegistration}>Sign Up</button>
             </form>
           </div>
           <div className="form-container sign-in">
@@ -62,8 +124,8 @@ function App() {
                 </a>
               </div>
               <span>or use your email password</span>
-              <input type="email" placeholder="Email" onChange={(e) => setEmail(e.target.value)} />
-              <input type="password" placeholder="Password" onChange={(e) => setPassword(e.target.value)} />
+              <input type="email" placeholder="Email" value={Email} onChange={(e) => setEmail(e.target.value)} />
+              <input type="password" placeholder="Password" value={passw} onChange={(e) => setPassword(e.target.value)} />
               <a href="#">Forget Your Password?</a>
               <button type="button" onClick={handleLoginClick}>Sign In</button>
             </form>

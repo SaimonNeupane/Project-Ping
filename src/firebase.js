@@ -3,6 +3,10 @@ import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";//yo chai google authentication ko laagi
 // import { getFirestore } from "firebase/firestore"; yo datastore ko lagi
 // Your web app's Firebase configuration
+import { getDatabase } from "firebase/database";
+
+
+
 const firebaseConfig = {
   apiKey: "AIzaSyA-mW1_mHT81K2WE516EoqtCGDUKgkJjiM",
   authDomain: "ping-83bd0.firebaseapp.com",
@@ -18,3 +22,4 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 // export const db = getFirestore(app);
 export default app;
+export const db=getDatabase();
